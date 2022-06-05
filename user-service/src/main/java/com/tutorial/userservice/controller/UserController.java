@@ -6,11 +6,17 @@ import com.tutorial.userservice.model.Car;
 import com.tutorial.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
@@ -35,12 +41,6 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping()
-    public ResponseEntity<User> save(@RequestBody User user) {
-        User userNew = userService.save(user);
-        return ResponseEntity.ok(userNew);
-    }
-
     @GetMapping("/cars/{userId}")
     public ResponseEntity<List<Car>> getCars(@PathVariable("userId") int userId) {
         User user = userService.getUserById(userId);
@@ -59,26 +59,33 @@ public class UserController {
         return ResponseEntity.ok(bikes);
     }
 
-    @PostMapping("/savecar/{userId}")
-    public ResponseEntity<Car> saveCar(@PathVariable("userId") int userId, @RequestBody Car car) {
-        if(userService.getUserById(userId) == null)
-            return ResponseEntity.notFound().build();
-        Car carNew = userService.saveCar(userId, car);
-        return ResponseEntity.ok(car);
-    }
-
-    @PostMapping("/savebike/{userId}")
-    public ResponseEntity<Bike> saveBike(@PathVariable("userId") int userId, @RequestBody Bike bike) {
-        if(userService.getUserById(userId) == null)
-            return ResponseEntity.notFound().build();
-        Bike bikeNew = userService.saveBike(userId, bike);
-        return ResponseEntity.ok(bike);
-    }
-
     @GetMapping("/getAll/{userId}")
     public ResponseEntity<Map<String, Object>> getAllVehicles(@PathVariable("userId") int userId) {
         Map<String, Object> result = userService.getUserAndVehicles(userId);
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping()
+    public ResponseEntity<User> save(@RequestBody User user) {
+        User userNew = userService.save(user);
+        return ResponseEntity.ok(userNew);
+    }
+
+    @PostMapping("/saveCar")
+    public ResponseEntity<Car> saveCar(@RequestBody Car car) {
+        if(userService.getUserById(Optional.ofNullable(car).map(Car::getUserId).orElse(null)) == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Car carNew = userService.saveCar(car.getUserId(), car);
+        return ResponseEntity.ok(carNew);
+    }
+
+    @PostMapping("/saveBike")
+    public ResponseEntity<Bike> saveBike(@RequestBody Bike bike) {
+        if(userService.getUserById(Optional.ofNullable(bike).map(Bike::getUserId).orElse(null)) == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Bike bikeNew = userService.saveBike(bike.getUserId(), bike);
+        return ResponseEntity.ok(bikeNew);
+    }
 }
