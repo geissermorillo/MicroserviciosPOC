@@ -2,15 +2,22 @@ package com.tutorial.carservice.controller;
 
 import com.tutorial.carservice.entity.Car;
 import com.tutorial.carservice.service.CarService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/car")
+@Slf4j
 public class CarController {
+
+    @Autowired
+    Tracer tracer;
 
     @Autowired
     CarService carService;
@@ -38,8 +45,9 @@ public class CarController {
     }
 
     @GetMapping("/byuser/{userId}")
-    public ResponseEntity<List<Car>> getByUserId(@PathVariable("userId") int userId) {
+    public ResponseEntity<List<Car>> getByUserId(@PathVariable("userId") int userId, @RequestHeader Map<String, String> headers) {
         List<Car> cars = carService.byUserId(userId);
+        log.info("returning car");
         return ResponseEntity.ok(cars);
     }
 

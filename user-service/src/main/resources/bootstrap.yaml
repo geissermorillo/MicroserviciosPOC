@@ -5,3 +5,11 @@ spring:
     config:
       enabled: true
       uri: http://localhost:8081/
+  sleuth:
+    baggage:
+      remote-fields: BUSINESS_PROCESS
+      local-fields: BUSINESS_PROCESS
+      correlation-fields: BUSINESS_PROCESS
+      tag-fields: BUSINESS_PROCESS
+logging:
+  config: src/main/resources/logback-spring.xml

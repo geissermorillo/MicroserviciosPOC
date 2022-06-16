@@ -5,7 +5,15 @@ import com.tutorial.userservice.model.Bike;
 import com.tutorial.userservice.model.Car;
 import com.tutorial.userservice.service.UserService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +29,14 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    Tracer tracer;
 
     @GetMapping
     public ResponseEntity<List<User>> getAll() {
@@ -35,7 +47,15 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getById(@PathVariable("id") int id) {
+    @NewSpan("GetUserById")
+    public ResponseEntity<User> getById(@PathVariable("id") @SpanTag("TagTest")  int id) {
+        log.info("Getting User");
+        try (Tracer.SpanInScope ws = this.tracer.withSpan(this.tracer.currentSpan())) {
+            BaggageInScope businessProcess = this.tracer.createBaggage("BUSINESS_PROCESS").set("ALM");
+            businessProcess.set("ALM2");
+            log.info("Getting User2");
+        }
+        log.info("Getting User3");
         User user = userService.getUserById(id);
         if(user == null)
             return ResponseEntity.notFound().build();
@@ -51,6 +71,15 @@ public class UserController {
     @CircuitBreaker(name = "carsCB", fallbackMethod = "fallbackGetCars")
     @GetMapping("/cars/{userId}")
     public ResponseEntity<List<Car>> getCars(@PathVariable("userId") int userId) {
+        log.info("Getting Cars");
+        try (Tracer.SpanInScope ws = this.tracer.withSpan(this.tracer.currentSpan())) {
+            BaggageInScope businessProcess = this.tracer.createBaggage("BUSINESS_PROCESS").set("ALM");
+            businessProcess.set("ALM2");
+
+            log.info("Getting Cars2 tracer.getAllBaggage()");
+        }
+        log.info("Getting Cars3");
+
         User user = userService.getUserById(userId);
         if(user == null)
             return ResponseEntity.notFound().build();
